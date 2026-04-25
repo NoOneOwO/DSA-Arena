@@ -40,27 +40,6 @@ export async function GET(
       );
     }
 
-    const isOwnProfile = currentUser.id === targetUser.id;
-
-    if (!isOwnProfile) {
-      const friendship = await prisma.friendship.findFirst({
-        where: {
-          status: "ACCEPTED",
-          OR: [
-            { requesterId: currentUser.id, addresseeId: targetUser.id },
-            { requesterId: targetUser.id, addresseeId: currentUser.id },
-          ],
-        },
-      });
-
-      if (!friendship) {
-        return NextResponse.json(
-          { success: false, error: "You must be friends to view this profile" },
-          { status: 403 }
-        );
-      }
-    }
-
     const [topicProgress, userBadges, allBadges, activities] = await Promise.all([
       prisma.topicProgress.findMany({
         where: { userId: targetUser.id },

@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   BookOpen,
   Trophy,
-  Users,
   Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,6 @@ const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tracker", label: "Tracker", icon: BookOpen },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  { href: "/friends", label: "Friends", icon: Users },
 ];
 
 function getLevelProgress(xp: number, level: number) {
@@ -74,7 +72,7 @@ export function Sidebar({ user }: SidebarProps) {
         <div className="rounded-lg border bg-card p-3 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Star className="h-4 w-4 text-yellow-500" />
+              <Star className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium">
                 {user.displayName || user.username}
               </span>

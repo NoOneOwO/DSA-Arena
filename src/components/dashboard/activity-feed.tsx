@@ -40,8 +40,8 @@ const ACTIVITY_ICONS: Record<ActivityType, React.ReactNode> = {
   PROBLEM_SOLVED: <CheckCircle2 className="h-4 w-4 text-green-500" />,
   LEVEL_UP: <ArrowUp className="h-4 w-4 text-blue-500" />,
   BADGE_EARNED: <Award className="h-4 w-4 text-amber-500" />,
-  FRIEND_ADDED: <UserPlus className="h-4 w-4 text-purple-500" />,
-  FRIEND_ACCEPTED: <UserPlus className="h-4 w-4 text-purple-500" />,
+  FRIEND_ADDED: <UserPlus className="h-4 w-4 text-amber-500" />,
+  FRIEND_ACCEPTED: <UserPlus className="h-4 w-4 text-amber-500" />,
   JOINED: <UserPlus className="h-4 w-4 text-green-500" />,
   STREAK_MILESTONE: <MessageSquare className="h-4 w-4 text-orange-500" />,
 };
@@ -51,11 +51,11 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Recent Activity</CardTitle>
+          <CardTitle className="text-base">Squad Activity</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-8">
-            No recent activity from friends yet.
+            No recent activity yet. Start solving problems!
           </p>
         </CardContent>
       </Card>
@@ -65,7 +65,7 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Recent Activity</CardTitle>
+          <CardTitle className="text-base">Squad Activity</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[320px]">

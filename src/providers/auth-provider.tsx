@@ -8,11 +8,11 @@ export interface User {
   username: string;
   displayName?: string;
   avatarUrl?: string;
+  role: string;
   xp: number;
   level: number;
   currentStreak: number;
   longestStreak: number;
-  inviteCode: string;
   lastSolvedAt?: string;
 }
 
@@ -20,8 +20,9 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, username: string, password: string) => Promise<void>;
+  isAdmin: boolean;
+  login: (name: string, adminKey?: string) => Promise<void>;
+  loginAs: (username: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -71,11 +72,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const login = React.useCallback(async (email: string, password: string) => {
+  const login = React.useCallback(async (name: string, adminKey?: string) => {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ name, adminKey }),
     });
 
     const json = await res.json();
@@ -87,24 +88,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(json.data.user);
   }, []);
 
-  const signup = React.useCallback(
-    async (email: string, username: string, password: string) => {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, username, password }),
-      });
+  const loginAs = React.useCallback(async (username: string) => {
+    const res = await fetch("/api/auth/login-as", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
 
-      const json = await res.json();
+    const json = await res.json();
 
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || "Signup failed");
-      }
+    if (!res.ok || !json.success) {
+      throw new Error(json.error || "Failed to switch user");
+    }
 
-      setUser(json.data.user);
-    },
-    []
-  );
+    setUser(json.data.user);
+  }, []);
 
   const logout = React.useCallback(async () => {
     try {
@@ -120,12 +118,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       loading,
       isAuthenticated: !!user,
+      isAdmin: user?.role === "ADMIN",
       login,
-      signup,
+      loginAs,
       logout,
       refreshUser: fetchUser,
     }),
-    [user, loading, login, signup, logout, fetchUser]
+    [user, loading, login, loginAs, logout, fetchUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

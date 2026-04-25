@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "DSA Arena",
-  description: "Gamified DSA tracking with friends",
+  description: "DSA tracking for the squad",
 };
 
 export default function RootLayout({

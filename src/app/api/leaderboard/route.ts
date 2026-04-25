@@ -15,22 +15,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const sortBy = searchParams.get("sortBy") || "xp";
 
-    const friendships = await prisma.friendship.findMany({
-      where: {
-        status: "ACCEPTED",
-        OR: [{ requesterId: user.id }, { addresseeId: user.id }],
-      },
-      select: { requesterId: true, addresseeId: true },
-    });
-
-    const friendIds = friendships.map((f) =>
-      f.requesterId === user.id ? f.addresseeId : f.requesterId
-    );
-
-    const allIds = [user.id, ...friendIds];
-
     const users = await prisma.user.findMany({
-      where: { id: { in: allIds } },
       select: {
         id: true,
         username: true,

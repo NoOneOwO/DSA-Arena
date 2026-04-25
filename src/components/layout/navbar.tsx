@@ -1,19 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/hooks/use-auth";
 import {
-  Zap,
+  Swords,
   LayoutDashboard,
   BookOpen,
   Trophy,
-  Users,
   Sun,
   Moon,
   Menu,
   LogOut,
   User,
+  Users,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -50,19 +52,44 @@ const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tracker", label: "Tracker", icon: BookOpen },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-  { href: "/friends", label: "Friends", icon: Users },
+];
+
+const ALL_MEMBERS = [
+  { name: "Prakhar", username: "prakhar" },
+  { name: "Taiyab", username: "taiyab" },
+  { name: "Satyam", username: "satyam" },
+  { name: "Arham", username: "arham" },
+  { name: "Vivek", username: "vivek" },
 ];
 
 export function Navbar({ user }: NavbarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { isAdmin, loginAs, logout } = useAuth();
+
+  async function handleLoginAs(username: string) {
+    try {
+      await loginAs(username);
+      router.refresh();
+    } catch {
+      // handled silently
+    }
+  }
+
+  async function handleLogout() {
+    await logout();
+    router.push("/");
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 lg:px-6">
         <Link href="/dashboard" className="mr-6 flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary" />
-          <span className="text-lg font-bold tracking-tight">DSA Arena</span>
+          <Swords className="h-5 w-5 text-primary" />
+          <span className="text-lg font-bold tracking-tight gradient-text">
+            DSA Arena
+          </span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
@@ -87,6 +114,38 @@ export function Navbar({ user }: NavbarProps) {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          {isAdmin && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2 text-primary">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Switch User</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel className="flex items-center gap-2">
+                  <Crown className="h-3.5 w-3.5 text-primary" />
+                  Admin: Login As
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {ALL_MEMBERS.filter((m) => m.username !== user.username).map(
+                  (member) => (
+                    <DropdownMenuItem
+                      key={member.username}
+                      className="cursor-pointer"
+                      onClick={() => handleLoginAs(member.username)}
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary mr-2">
+                        {member.name[0]}
+                      </div>
+                      {member.name}
+                    </DropdownMenuItem>
+                  )
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           <Button
             variant="ghost"
             size="icon"
@@ -101,8 +160,10 @@ export function Navbar({ user }: NavbarProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.username} />}
-                  <AvatarFallback className="text-xs">
+                  {user.avatarUrl && (
+                    <AvatarImage src={user.avatarUrl} alt={user.username} />
+                  )}
+                  <AvatarFallback className="text-xs bg-primary/10 text-primary">
                     {getInitials(user.displayName || user.username)}
                   </AvatarFallback>
                 </Avatar>
@@ -120,19 +181,20 @@ export function Navbar({ user }: NavbarProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <Link href="/profile">
+              <Link href={`/profile/${user.username}`}>
                 <DropdownMenuItem className="cursor-pointer">
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator />
-              <Link href="/api/auth/logout">
-                <DropdownMenuItem className="cursor-pointer text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </DropdownMenuItem>
-              </Link>
+              <DropdownMenuItem
+                className="cursor-pointer text-destructive"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -146,8 +208,8 @@ export function Navbar({ user }: NavbarProps) {
             <SheetContent side="left" className="w-72">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-primary" />
-                  DSA Arena
+                  <Swords className="h-5 w-5 text-primary" />
+                  <span className="gradient-text">DSA Arena</span>
                 </SheetTitle>
               </SheetHeader>
               <nav className="mt-6 flex flex-col gap-1">

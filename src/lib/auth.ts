@@ -1,26 +1,14 @@
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { prisma } from "./prisma";
 
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-change-me";
-const TOKEN_EXPIRY = "7d";
+const TOKEN_EXPIRY = "30d";
 
 export interface JWTPayload {
   userId: string;
   email: string;
   username: string;
-}
-
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 12);
-}
-
-export async function verifyPassword(
-  password: string,
-  hash: string
-): Promise<boolean> {
-  return bcrypt.compare(password, hash);
 }
 
 export function signToken(payload: JWTPayload): string {
@@ -52,7 +40,7 @@ export async function getCurrentUser() {
         username: true,
         displayName: true,
         avatarUrl: true,
-        inviteCode: true,
+        role: true,
         xp: true,
         level: true,
         currentStreak: true,
@@ -97,6 +85,7 @@ export async function getUserFromRequest(request: Request) {
       email: true,
       username: true,
       displayName: true,
+      role: true,
       xp: true,
       level: true,
       currentStreak: true,

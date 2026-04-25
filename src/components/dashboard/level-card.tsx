@@ -15,7 +15,7 @@ function getLevelTier(level: number): {
   color: string;
 } {
   if (level >= 20) return { label: "Grandmaster", color: "text-red-500" };
-  if (level >= 15) return { label: "Master", color: "text-purple-500" };
+  if (level >= 15) return { label: "Master", color: "text-amber-400" };
   if (level >= 10) return { label: "Expert", color: "text-blue-500" };
   if (level >= 5) return { label: "Intermediate", color: "text-green-500" };
   return { label: "Beginner", color: "text-muted-foreground" };

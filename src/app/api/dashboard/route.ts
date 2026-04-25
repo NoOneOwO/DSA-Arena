@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
 import { xpToNextLevel } from "@/lib/xp";
-import { getTopicName } from "@/lib/topics";
 import { format, subDays } from "date-fns";
 
 export async function GET(request: Request) {
@@ -19,12 +18,7 @@ export async function GET(request: Request) {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekAgo = subDays(todayStart, 6);
 
-    const [
-      topicProgress,
-      todayActivities,
-      weeklyActivities,
-      friendships,
-    ] = await Promise.all([
+    const [topicProgress, todayActivities, weeklyActivities] = await Promise.all([
       prisma.topicProgress.findMany({
         where: { userId: user.id },
       }),
@@ -42,13 +36,6 @@ export async function GET(request: Request) {
           createdAt: { gte: weekAgo },
         },
         select: { createdAt: true },
-      }),
-      prisma.friendship.findMany({
-        where: {
-          status: "ACCEPTED",
-          OR: [{ requesterId: user.id }, { addresseeId: user.id }],
-        },
-        select: { requesterId: true, addresseeId: true },
       }),
     ]);
 
@@ -72,44 +59,19 @@ export async function GET(request: Request) {
       weeklyData.push({ day: dayLabel, count: dayCountMap.get(key) ?? 0 });
     }
 
-    const friendIds = friendships.map((f) =>
-      f.requesterId === user.id ? f.addresseeId : f.requesterId
-    );
-
-    let friendActivities: {
-      id: string;
-      userId: string;
-      type: string;
-      message: string;
-      createdAt: Date;
-      user: { id: string; username: string; displayName: string | null; avatarUrl: string | null };
-    }[] = [];
-
-    if (friendIds.length > 0) {
-      friendActivities = await prisma.activity.findMany({
-        where: { userId: { in: friendIds } },
-        include: {
-          user: {
-            select: { id: true, username: true, displayName: true, avatarUrl: true },
-          },
+    const allActivities = await prisma.activity.findMany({
+      include: {
+        user: {
+          select: { id: true, username: true, displayName: true, avatarUrl: true },
         },
-        orderBy: { createdAt: "desc" },
-        take: 20,
-      });
-    }
-
-    const topicSummary = topicProgress
-      .map((p) => ({
-        id: p.topicId,
-        name: getTopicName(p.topicId),
-        totalSolved: p.easySolved + p.mediumSolved + p.hardSolved,
-      }))
-      .sort((a, b) => b.totalSolved - a.totalSolved)
-      .slice(0, 3);
+      },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+    });
 
     const levelInfo = xpToNextLevel(user.xp);
 
-    const recentActivity = friendActivities.map((a) => ({
+    const recentActivity = allActivities.map((a) => ({
       id: a.id,
       userId: a.userId,
       username: a.user.username,
@@ -119,6 +81,18 @@ export async function GET(request: Request) {
       message: a.message,
       createdAt: a.createdAt,
     }));
+
+    const allUsers = await prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        xp: true,
+        level: true,
+        currentStreak: true,
+      },
+      orderBy: { xp: "desc" },
+    });
 
     return NextResponse.json({
       success: true,
@@ -133,7 +107,7 @@ export async function GET(request: Request) {
         totalSolved,
         weeklyData,
         recentActivity,
-        topicSummary,
+        squad: allUsers,
       },
     });
   } catch (error) {

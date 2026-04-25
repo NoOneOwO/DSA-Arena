@@ -23,7 +23,7 @@ interface ProfileHeaderProps {
 
 function getLevelTier(level: number) {
   if (level >= 20) return { label: "Grandmaster", color: "text-red-500 border-red-500/30" };
-  if (level >= 15) return { label: "Master", color: "text-purple-500 border-purple-500/30" };
+  if (level >= 15) return { label: "Master", color: "text-amber-400 border-amber-400/30" };
   if (level >= 10) return { label: "Expert", color: "text-blue-500 border-blue-500/30" };
   if (level >= 5) return { label: "Intermediate", color: "text-green-500 border-green-500/30" };
   return { label: "Beginner", color: "text-muted-foreground" };

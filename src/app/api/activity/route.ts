@@ -13,34 +13,10 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const friendsOnly = searchParams.get("friendsOnly") === "true";
     const before = searchParams.get("before");
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20")));
 
-    const friendships = await prisma.friendship.findMany({
-      where: {
-        status: "ACCEPTED",
-        OR: [{ requesterId: user.id }, { addresseeId: user.id }],
-      },
-      select: { requesterId: true, addresseeId: true },
-    });
-
-    const friendIds = friendships.map((f) =>
-      f.requesterId === user.id ? f.addresseeId : f.requesterId
-    );
-
-    const userIds = friendsOnly ? friendIds : [user.id, ...friendIds];
-
-    if (userIds.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: { activities: [], nextCursor: null },
-      });
-    }
-
-    const where: Record<string, unknown> = {
-      userId: { in: userIds },
-    };
+    const where: Record<string, unknown> = {};
 
     if (before) {
       where.createdAt = { lt: new Date(before) };
