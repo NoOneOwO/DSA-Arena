@@ -1,7 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { Navbar } from "./navbar";
 import { Sidebar } from "./sidebar";
 
@@ -15,20 +13,10 @@ interface AppShellUser {
 
 interface AppShellProps {
   children: React.ReactNode;
-  user: AppShellUser | null;
+  user: AppShellUser;
 }
 
 export function AppShell({ children, user }: AppShellProps) {
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!user) {
-      router.replace("/");
-    }
-  }, [user, router]);
-
-  if (!user) return null;
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar user={user} />

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
+import { getAuthPayload } from "@/lib/auth";
 import { getAllTopicIds, getTopicName } from "@/lib/topics";
 import {
   calculateXpFromCounts,
@@ -29,8 +29,8 @@ export async function PATCH(
   { params }: { params: Promise<{ topicId: string }> }
 ) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const auth = getAuthPayload(request);
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "Not authenticated" },
         { status: 401 }
@@ -74,20 +74,40 @@ export async function PATCH(
       );
     }
 
-    await prisma.topicProgress.upsert({
-      where: { userId_topicId: { userId: user.id, topicId } },
-      create: {
-        userId: user.id,
-        topicId,
-        easySolved: easySolved ?? 0,
-        mediumSolved: mediumSolved ?? 0,
-        hardSolved: hardSolved ?? 0,
-      },
-      update: updateData,
-    });
+    const [, user] = await Promise.all([
+      prisma.topicProgress.upsert({
+        where: { userId_topicId: { userId: auth.userId, topicId } },
+        create: {
+          userId: auth.userId,
+          topicId,
+          easySolved: easySolved ?? 0,
+          mediumSolved: mediumSolved ?? 0,
+          hardSolved: hardSolved ?? 0,
+        },
+        update: updateData,
+      }),
+      prisma.user.findUnique({
+        where: { id: auth.userId },
+        select: {
+          id: true,
+          xp: true,
+          level: true,
+          currentStreak: true,
+          longestStreak: true,
+          lastSolvedAt: true,
+        },
+      }),
+    ]);
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
+    }
 
     const allProgress = await prisma.topicProgress.findMany({
-      where: { userId: user.id },
+      where: { userId: auth.userId },
     });
 
     let totalEasy = 0;

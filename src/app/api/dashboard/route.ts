@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
+import { getAuthPayload } from "@/lib/auth";
 import { xpToNextLevel } from "@/lib/xp";
 import { format, subDays } from "date-fns";
 
 export async function GET(request: Request) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const auth = getAuthPayload(request);
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "Not authenticated" },
         { status: 401 }
@@ -18,21 +18,30 @@ export async function GET(request: Request) {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekAgo = subDays(todayStart, 6);
 
-    const [topicProgress, todayActivities, weeklyActivities, allActivities, allUsers] =
+    const [user, topicProgress, todayActivities, weeklyActivities, allActivities, allUsers] =
       await Promise.all([
+        prisma.user.findUnique({
+          where: { id: auth.userId },
+          select: {
+            xp: true,
+            level: true,
+            currentStreak: true,
+            longestStreak: true,
+          },
+        }),
         prisma.topicProgress.findMany({
-          where: { userId: user.id },
+          where: { userId: auth.userId },
         }),
         prisma.activity.count({
           where: {
-            userId: user.id,
+            userId: auth.userId,
             type: "PROGRESS_UPDATE",
             createdAt: { gte: todayStart },
           },
         }),
         prisma.activity.findMany({
           where: {
-            userId: user.id,
+            userId: auth.userId,
             type: "PROGRESS_UPDATE",
             createdAt: { gte: weekAgo },
           },
@@ -59,6 +68,13 @@ export async function GET(request: Request) {
           orderBy: { xp: "desc" },
         }),
       ]);
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
+    }
 
     let totalSolved = 0;
     for (const p of topicProgress) {

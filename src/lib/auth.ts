@@ -71,11 +71,22 @@ export function getTokenFromRequest(request: Request): string | null {
   return null;
 }
 
-export async function getUserFromRequest(request: Request) {
+/**
+ * Lightweight auth — verifies JWT only, no DB round-trip.
+ * Use for routes that just need userId / username.
+ */
+export function getAuthPayload(request: Request): JWTPayload | null {
   const token = getTokenFromRequest(request);
   if (!token) return null;
+  return verifyToken(token);
+}
 
-  const payload = verifyToken(token);
+/**
+ * Full auth — verifies JWT then fetches user from DB.
+ * Use only when you need fresh user fields (xp, level, streak, etc.).
+ */
+export async function getUserFromRequest(request: Request) {
+  const payload = getAuthPayload(request);
   if (!payload) return null;
 
   const user = await prisma.user.findUnique({

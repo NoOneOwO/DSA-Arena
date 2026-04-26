@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
+import { getAuthPayload } from "@/lib/auth";
 import { flattenTopics } from "@/lib/topics";
 import { calculateXpFromCounts } from "@/lib/xp";
 
 export async function GET(request: Request) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const auth = getAuthPayload(request);
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "Not authenticated" },
         { status: 401 }
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     }
 
     const progressRecords = await prisma.topicProgress.findMany({
-      where: { userId: user.id },
+      where: { userId: auth.userId },
     });
 
     const progressMap = new Map(

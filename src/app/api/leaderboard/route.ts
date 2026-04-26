@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
+import { getAuthPayload } from "@/lib/auth";
 
 export async function GET(request: Request) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const auth = getAuthPayload(request);
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "Not authenticated" },
         { status: 401 }
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
       xp: u.xp,
       totalSolved: u.totalSolved,
       streak: u.currentStreak,
-      isCurrentUser: u.id === user.id,
+      isCurrentUser: u.id === auth.userId,
     }));
 
     const response = NextResponse.json({

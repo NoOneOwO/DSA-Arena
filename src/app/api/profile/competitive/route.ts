@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserFromRequest } from "@/lib/auth";
+import { getAuthPayload } from "@/lib/auth";
 
 export async function PATCH(request: Request) {
   try {
-    const user = await getUserFromRequest(request);
-    if (!user) {
+    const auth = getAuthPayload(request);
+    if (!auth) {
       return NextResponse.json(
         { success: false, error: "Not authenticated" },
         { status: 401 }
@@ -32,7 +32,7 @@ export async function PATCH(request: Request) {
     }
 
     const updated = await prisma.user.update({
-      where: { id: user.id },
+      where: { id: auth.userId },
       data: updateData,
       select: {
         leetcodeUsername: true,
