@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,6 +12,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { cn, getInitials } from "@/lib/utils";
+import { UserHoverCard } from "./user-hover-card";
 
 interface LeaderboardEntry {
   userId: string;
@@ -81,36 +83,47 @@ export function LeaderboardTable({
                 <RankDisplay rank={entry.rank} />
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    {entry.avatarUrl && (
-                      <AvatarImage src={entry.avatarUrl} alt={entry.username} />
-                    )}
-                    <AvatarFallback className="text-xs">
-                      {getInitials(entry.displayName || entry.username)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={cn(
-                          "text-sm font-medium truncate",
-                          isCurrentUser && "text-primary"
-                        )}
-                      >
-                        {entry.displayName || entry.username}
-                      </span>
-                      {isCurrentUser && (
-                        <Badge variant="outline" className="text-[10px] px-1.5">
-                          You
-                        </Badge>
+                <UserHoverCard username={entry.username}>
+                  <Link
+                    href={`/profile/${entry.username}`}
+                    className="flex items-center gap-3 group"
+                  >
+                    <Avatar className="h-8 w-8">
+                      {entry.avatarUrl && (
+                        <AvatarImage
+                          src={entry.avatarUrl}
+                          alt={entry.username}
+                        />
                       )}
+                      <AvatarFallback className="text-xs">
+                        {getInitials(entry.displayName || entry.username)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "text-sm font-medium truncate group-hover:underline",
+                            isCurrentUser && "text-primary"
+                          )}
+                        >
+                          {entry.displayName || entry.username}
+                        </span>
+                        {isCurrentUser && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-1.5"
+                          >
+                            You
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        @{entry.username}
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      @{entry.username}
-                    </span>
-                  </div>
-                </div>
+                  </Link>
+                </UserHoverCard>
               </TableCell>
               <TableCell className="hidden sm:table-cell">
                 <Badge variant="secondary" className="text-xs">
@@ -125,9 +138,7 @@ export function LeaderboardTable({
               </TableCell>
               <TableCell className="hidden lg:table-cell text-right">
                 {entry.streak > 0 ? (
-                  <span className="tabular-nums">
-                    🔥 {entry.streak}
-                  </span>
+                  <span className="tabular-nums">🔥 {entry.streak}</span>
                 ) : (
                   <span className="text-muted-foreground">-</span>
                 )}

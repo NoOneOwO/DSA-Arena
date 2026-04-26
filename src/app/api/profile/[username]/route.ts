@@ -29,6 +29,8 @@ export async function GET(
         level: true,
         currentStreak: true,
         longestStreak: true,
+        leetcodeUsername: true,
+        codeforcesUsername: true,
         createdAt: true,
       },
     });

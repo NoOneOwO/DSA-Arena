@@ -26,9 +26,11 @@ model User {
   level         Int       @default(1)
   currentStreak Int       @default(0)
   longestStreak Int       @default(0)
-  lastSolvedAt  DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  lastSolvedAt       DateTime?
+  leetcodeUsername    String?
+  codeforcesUsername  String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   topicProgress TopicProgress[]
   activities    Activity[]

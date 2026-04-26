@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { TopicBreakdown } from "@/components/profile/topic-breakdown";
 import { BadgeDisplay } from "@/components/profile/badge-display";
 import { ActivityTimeline } from "@/components/profile/activity-timeline";
+import { CompetitiveStats } from "@/components/profile/competitive-stats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserX } from "lucide-react";
@@ -20,6 +22,8 @@ interface ProfileData {
     level: number;
     currentStreak: number;
     longestStreak: number;
+    leetcodeUsername?: string | null;
+    codeforcesUsername?: string | null;
     createdAt: string;
   };
   stats: {
@@ -63,9 +67,15 @@ function ProfileSkeleton() {
 
 export default function ProfilePage() {
   const params = useParams<{ username: string }>();
+  const { user: currentUser } = useAuth();
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  const isOwnProfile = !!(
+    currentUser && data?.user &&
+    currentUser.id === data.user.id
+  );
 
   useEffect(() => {
     async function fetchProfile() {
@@ -89,6 +99,18 @@ export default function ProfilePage() {
 
     if (params.username) fetchProfile();
   }, [params.username]);
+
+  function handleCompetitiveUpdate(lc: string | null, cf: string | null) {
+    if (!data) return;
+    setData({
+      ...data,
+      user: {
+        ...data.user,
+        leetcodeUsername: lc,
+        codeforcesUsername: cf,
+      },
+    });
+  }
 
   if (loading) return <ProfileSkeleton />;
 
@@ -121,6 +143,13 @@ export default function ProfilePage() {
         easySolved={data.stats.easySolved}
         mediumSolved={data.stats.mediumSolved}
         hardSolved={data.stats.hardSolved}
+      />
+
+      <CompetitiveStats
+        leetcodeUsername={data.user.leetcodeUsername}
+        codeforcesUsername={data.user.codeforcesUsername}
+        isOwnProfile={isOwnProfile}
+        onUsernamesUpdated={handleCompetitiveUpdate}
       />
 
       <Tabs defaultValue="progress">
