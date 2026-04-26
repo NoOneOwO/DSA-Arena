@@ -18,26 +18,47 @@ export async function GET(request: Request) {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekAgo = subDays(todayStart, 6);
 
-    const [topicProgress, todayActivities, weeklyActivities] = await Promise.all([
-      prisma.topicProgress.findMany({
-        where: { userId: user.id },
-      }),
-      prisma.activity.count({
-        where: {
-          userId: user.id,
-          type: "PROGRESS_UPDATE",
-          createdAt: { gte: todayStart },
-        },
-      }),
-      prisma.activity.findMany({
-        where: {
-          userId: user.id,
-          type: "PROGRESS_UPDATE",
-          createdAt: { gte: weekAgo },
-        },
-        select: { createdAt: true },
-      }),
-    ]);
+    const [topicProgress, todayActivities, weeklyActivities, allActivities, allUsers] =
+      await Promise.all([
+        prisma.topicProgress.findMany({
+          where: { userId: user.id },
+        }),
+        prisma.activity.count({
+          where: {
+            userId: user.id,
+            type: "PROGRESS_UPDATE",
+            createdAt: { gte: todayStart },
+          },
+        }),
+        prisma.activity.findMany({
+          where: {
+            userId: user.id,
+            type: "PROGRESS_UPDATE",
+            createdAt: { gte: weekAgo },
+          },
+          select: { createdAt: true },
+        }),
+        prisma.activity.findMany({
+          include: {
+            user: {
+              select: { id: true, username: true, displayName: true, avatarUrl: true },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 30,
+        }),
+        prisma.user.findMany({
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            xp: true,
+            level: true,
+            currentStreak: true,
+          },
+          orderBy: { xp: "desc" },
+        }),
+      ]);
 
     let totalSolved = 0;
     for (const p of topicProgress) {
@@ -59,16 +80,6 @@ export async function GET(request: Request) {
       weeklyData.push({ day: dayLabel, count: dayCountMap.get(key) ?? 0 });
     }
 
-    const allActivities = await prisma.activity.findMany({
-      include: {
-        user: {
-          select: { id: true, username: true, displayName: true, avatarUrl: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 30,
-    });
-
     const levelInfo = xpToNextLevel(user.xp);
 
     const recentActivity = allActivities.map((a) => ({
@@ -81,18 +92,6 @@ export async function GET(request: Request) {
       message: a.message,
       createdAt: a.createdAt,
     }));
-
-    const allUsers = await prisma.user.findMany({
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        xp: true,
-        level: true,
-        currentStreak: true,
-      },
-      orderBy: { xp: "desc" },
-    });
 
     return NextResponse.json({
       success: true,

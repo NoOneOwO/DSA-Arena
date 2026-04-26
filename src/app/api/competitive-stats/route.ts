@@ -108,10 +108,15 @@ export async function GET(request: Request) {
       codeforcesUsername ? fetchCodeforcesStats(codeforcesUsername) : null,
     ]);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: { leetcode, codeforces },
     });
+    response.headers.set(
+      "Cache-Control",
+      "private, s-maxage=300, stale-while-revalidate=600"
+    );
+    return response;
   } catch (error) {
     console.error("Competitive stats error:", error);
     return NextResponse.json(

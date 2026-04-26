@@ -1,11 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/hooks/use-auth";
 import { StatsOverview } from "@/components/dashboard/stats-overview";
-import { WeeklyGraph } from "@/components/dashboard/weekly-graph";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const WeeklyGraph = dynamic(
+  () => import("@/components/dashboard/weekly-graph").then((m) => m.WeeklyGraph),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[280px] w-full rounded-lg" />,
+  }
+);
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Crown, Flame, Trophy } from "lucide-react";
 

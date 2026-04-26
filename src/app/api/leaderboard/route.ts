@@ -60,10 +60,15 @@ export async function GET(request: Request) {
       isCurrentUser: u.id === user.id,
     }));
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: { leaderboard, sortBy },
     });
+    response.headers.set(
+      "Cache-Control",
+      "private, s-maxage=30, stale-while-revalidate=60"
+    );
+    return response;
   } catch (error) {
     console.error("Leaderboard error:", error);
     return NextResponse.json(
